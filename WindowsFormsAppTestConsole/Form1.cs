@@ -16,26 +16,9 @@ namespace WindowsFormsAppTestConsole
 {
   public partial class Form1 : Form
   {
-    static string _shellExeFilePath = @"C:\temp\innodbclusteradmin\bin\mysqlsh.exe";
-    static string _shellBinFolderPath = @"C:\temp\innodbclusteradmin\bin\";
-    static int _lastErrorCode;
-    static string _innoDBClusterUri;
-
-    public Form1()
-    {
-      InitializeComponent();
-    }
-
-    private void Form1_Load(object sender, EventArgs e)
-    {
-      GetLocalIPAddress();
-    }
-
-    /// <summary>
-    /// Gets the local ip address and sets the Settings option for it.
-    /// </summary>
-    /// <returns></returns>
-    /// <exception cref="System.Exception">Local IP Address Not Found!</exception>
+    #region Form Secondary Methods
+    public Form1() { InitializeComponent(); }
+    private void Form1_Load(object sender, EventArgs e) { GetLocalIPAddress(); }
     public void GetLocalIPAddress()
     {
       if (!string.IsNullOrEmpty(_innoDBClusterUri)) return;
@@ -58,20 +41,60 @@ namespace WindowsFormsAppTestConsole
 
       MessageBox.Show("Local IP Address not found.");
     }
+    #endregion
 
+    #region Fields and Variables
+    static string _shellExeFilePath = @"C:\temp\innodbclusteradmin\bin\mysqlsh.exe";
+    static string _shellBinFolderPath = @"C:\temp\innodbclusteradmin\bin\";
+
+    static int _lastErrorCode;
+    static string _innoDBClusterUri;
+    static string clusterAdmin = "dba";
+    static string clusterAdminPassword = "1234";
+    static string clusterInstanceHostname = "devCluster";
+    static string clusterInstancePort = "3306";
+    static string localRootPassword = "1234";
+    static string localInstancePort = "3306";
+    static string cnfPath = @"C:\ProgramData\MySQL\MySQL Server 5.7\my.ini";
+    static string _icJsFileDestinationPath = @"C:\Temp\ic.js";
+
+    #region Repeated variables with different identifiers
+    public static string rootPassword { get { return localRootPassword; } }
+    public static string clusterName { get { return clusterInstanceHostname; } }
+    public static string seedInstanceHostname { get { return _innoDBClusterUri; } }
+    public static string localInstanceHostname { get { return _innoDBClusterUri; } }
+    public static string seedInstancePort { get { return localInstancePort; } }
+    #endregion
+
+    #endregion
+
+    #region Main Methods
+    // -------------------------------NOTE!! All other required files to unzip tools are located in the OtherFiles folder at the project root level!---------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     private void button1_Click(object sender, EventArgs e)
     {
-      runCMDAsAdmin(string.Format(@"--no-wizard --file C:\Temp\ic.js prepareLocalInstance dba 1234 3306 1234 C:\ProgramData\MySQL\MySQL Server 5.7\my.ini"));
-      runCMDAsAdmin(string.Format(@"--no-wizard --file C:\Temp\ic.js createProductionCluster devCluster dba 1234 {0} 3306", _innoDBClusterUri));
+      //TODO: Run this method as Admin
+      // prepareLocalInstance: function (clusterAdmin, clusterAdminPassword, localInstancePort, rootPassword, cnfPath)
+      runCMD(string.Format(@"--no-wizard --file {0} prepareLocalInstance {1} {2} {3} {4} {5}", _icJsFileDestinationPath, clusterAdmin, clusterAdminPassword, localInstancePort, rootPassword, cnfPath));
+
+      MessageBox.Show("Restart your server now (manually)");
+
+      // createProductionCluster: function(clusterName, clusterAdmin, clusterAdminPassword, seedInstanceHostname, seedInstancePort)
+      runCMD(string.Format(@"--no-wizard --file {0} createProductionCluster {1} {2} {3} {4} {5}", _icJsFileDestinationPath, clusterName, clusterAdmin, clusterAdminPassword, seedInstanceHostname, seedInstancePort));
     }
 
     private void button2_Click(object sender, EventArgs e)
     {
-      runCMDAsAdmin(string.Format(@"--no-wizard --file C:\Temp\ic.js prepareLocalInstance dba 1234 3306 1234 C:\ProgramData\MySQL\MySQL Server 5.7\my.ini"));
-      runCMDAsAdmin(string.Format(@"--no-wizard --file C:\Temp\ic.js addLocalInstanceToCluster dba 1234 devCluster 3306 1234 {0} 3306", _innoDBClusterUri));
+      //TODO: Run this method as Admin
+      //  prepareLocalInstance: function (clusterAdmin, clusterAdminPassword, localInstancePort, rootPassword, cnfPath)
+      runCMD(string.Format(@"--no-wizard --file {0} prepareLocalInstance {1} {2} {3} {4} {5}", _icJsFileDestinationPath, clusterAdmin, clusterAdminPassword, localInstancePort, rootPassword, cnfPath));
+
+      MessageBox.Show("Restart your server now (manually)");
+
+      // addLocalInstanceToCluster: function (clusterAdmin, clusterAdminPassword, clusterInstanceHostname, clusterInstancePort, localRootPassword, localInstanceHostname, localInstancePort)
+      runCMD(string.Format(@"--no-wizard --file {0} addLocalInstanceToCluster {1} {2} {3} {4} {5} {6} {7}", _icJsFileDestinationPath, clusterAdmin, clusterAdminPassword, clusterInstanceHostname, clusterInstancePort, localRootPassword, localInstanceHostname, localInstancePort));
     }
 
-    private string runCMDAsAdmin(string args)
+    private string runCMD(string args)
     {
       ProcessStartInfo processStartInfo = new ProcessStartInfo(_shellExeFilePath);
       processStartInfo.RedirectStandardInput = true;
@@ -120,5 +143,6 @@ namespace WindowsFormsAppTestConsole
 
       throw new Exception("InnoDB Cluster Admin cannot run.");
     }
+    #endregion
   }
 }
